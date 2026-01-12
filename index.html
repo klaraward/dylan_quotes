@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bob Dylan Quiz</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Georgia, 'Times New Roman', serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: #e8e8e8;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #c9a227;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 2rem;
+            font-style: italic;
+        }
+
+        .quiz-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(201, 162, 39, 0.2);
+        }
+
+        .quote {
+            font-size: 1.4rem;
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            font-style: italic;
+        }
+
+        .blank {
+            display: inline-block;
+            min-width: 120px;
+            border-bottom: 2px solid #c9a227;
+            margin: 0 5px;
+            text-align: center;
+            color: #c9a227;
+            font-style: normal;
+            font-weight: bold;
+        }
+
+        .song-title {
+            color: #888;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 10px;
+            margin-top: 1.5rem;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 16px;
+            font-size: 1rem;
+            border: 2px solid rgba(201, 162, 39, 0.3);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #e8e8e8;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #c9a227;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #c9a227;
+            color: #1a1a2e;
+            font-weight: bold;
+        }
+
+        .btn-primary:hover {
+            background: #d4af37;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e8e8e8;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .feedback {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .feedback.correct {
+            background: rgba(39, 174, 96, 0.2);
+            color: #27ae60;
+        }
+
+        .feedback.wrong {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+
+        .score {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #c9a227;
+            margin-bottom: 1rem;
+        }
+
+        .progress {
+            text-align: center;
+            color: #888;
+            margin-bottom: 0.5rem;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .final-score {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .final-score h2 {
+            color: #c9a227;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .final-score p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bob Dylan Quiz</h1>
+        <p class="subtitle">Fyll i ordet som saknas</p>
+
+        <div class="score">Poäng: <span id="score">0</span> / <span id="total">0</span></div>
+        <p class="progress">Fråga <span id="current">1</span> av <span id="questions">10</span></p>
+
+        <div id="quiz-section" class="quiz-card">
+            <div class="quote" id="quote"></div>
+            <div class="song-title" id="song"></div>
+
+            <div class="input-section">
+                <input type="text" id="answer" placeholder="Skriv det saknade ordet..." autocomplete="off">
+                <button class="btn-primary" id="submit-btn">Svara</button>
+            </div>
+
+            <div id="feedback" class="feedback hidden"></div>
+
+            <div id="next-section" class="actions hidden">
+                <button class="btn-secondary" id="next-btn">Nästa fråga</button>
+            </div>
+        </div>
+
+        <div id="result-section" class="quiz-card hidden">
+            <div class="final-score">
+                <h2>Quiz avslutat!</h2>
+                <p>Du fick <span id="final-score"></span> av <span id="final-total"></span> rätt!</p>
+                <button class="btn-primary" id="restart-btn">Spela igen</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const quotes = [
+            {
+                text: "She takes just like a woman, yes she does, she makes love just like a woman, and she ____ just like a woman, but she breaks just like a little girl",
+                answer: "aches",
+                song: "Just Like a Woman (1966)"
+            },
+            {
+                text: "I've stumbled on the side of twelve misty ____, I've stepped in the middle of seven sad forests",
+                answer: "mountains",
+                song: "A Hard Rain's a-Gonna Fall (1963)"
+            },
+            {
+                text: "The ghost of ____ stands inside his shoes, waiting for you to come and prove his emptiness is true",
+                answer: "electricity",
+                song: "Visions of Johanna (1966)"
+            },
+            {
+                text: "You used to ride on the chrome horse with your ____, to have such a good time, to be so amused",
+                answer: "diplomat",
+                song: "Like a Rolling Stone (1965)"
+            },
+            {
+                text: "Ain't it hard to stumble and land in some funny ____ pool? Ain't it hard to play this game?",
+                answer: "lagoon",
+                song: "Temporary Like Achilles (1966)"
+            },
+            {
+                text: "She's got everything she needs, she's an artist, she don't look ____, she can take the dark out of the nighttime and paint the daytime black",
+                answer: "back",
+                song: "She Belongs to Me (1965)"
+            },
+            {
+                text: "The ____ stood alone upon the window ledge, while the sun beat down upon his guilt-stained brow",
+                answer: "lonesome",
+                song: "Desolation Row (1965)"
+            },
+            {
+                text: "I offered up my innocence and got ____ in exchange",
+                answer: "repaid",
+                song: "My Back Pages (1964)"
+            },
+            {
+                text: "Darkness at the break of ____, shadows even the silver spoon",
+                answer: "noon",
+                song: "It's Alright, Ma (I'm Only Bleeding) (1965)"
+            },
+            {
+                text: "She knows there's no success like ____, and that failure's no success at all",
+                answer: "failure",
+                song: "Love Minus Zero/No Limit (1965)"
+            },
+            {
+                text: "The motorcycle black ____ came in the air, I heard the drizzlin' rain and the bending of the boughs",
+                answer: "madonna",
+                song: "Gates of Eden (1965)"
+            },
+            {
+                text: "Jewels and ____ hung from the heads of all the members of the wretched and the meek",
+                answer: "binoculars",
+                song: "Visions of Johanna (1966)"
+            },
+            {
+                text: "Twenty years of schoolin' and they put you on the ____ shift",
+                answer: "day",
+                song: "Subterranean Homesick Blues (1965)"
+            },
+            {
+                text: "I was riding on the ____ train, soul to soul, bound to die",
+                answer: "Mayflower",
+                song: "Tangled Up in Blue (1975)"
+            },
+            {
+                text: "Praise be to ____, the god of the desert, the father of the unloved",
+                answer: "Nero's",
+                song: "Tombstone Blues (1965)"
+            },
+            {
+                text: "Crimson flames tied through my ears, rollin' high and mighty ____",
+                answer: "traps",
+                song: "Mr. Tambourine Man (1965)"
+            },
+            {
+                text: "I ain't sayin' you treated me unkind, you could have done better but I don't ____",
+                answer: "mind",
+                song: "Don't Think Twice, It's All Right (1963)"
+            },
+            {
+                text: "All the tired horses in the ____, how'm I supposed to get any ridin' done?",
+                answer: "sun",
+                song: "All the Tired Horses (1970)"
+            },
+            {
+                text: "Come you masters of ____, you that build the big guns",
+                answer: "war",
+                song: "Masters of War (1963)"
+            },
+            {
+                text: "The pump don't work 'cause the ____ took the handles",
+                answer: "vandals",
+                song: "Subterranean Homesick Blues (1965)"
+            },
+            {
+                text: "I can't help it if I'm ____, I can't help it if I'm blue",
+                answer: "lucky",
+                song: "Idiot Wind (1975)"
+            },
+            {
+                text: "People are crazy and times are ____",
+                answer: "strange",
+                song: "Ballad of a Thin Man (1965)"
+            },
+            {
+                text: "Behind every beautiful thing there's been some kind of ____",
+                answer: "pain",
+                song: "Not Dark Yet (1997)"
+            },
+            {
+                text: "Ring them ____, sweet Martha, for the poor man's son",
+                answer: "bells",
+                song: "Chimes of Freedom (1964)"
+            },
+            {
+                text: "God said to ____, kill me a son, Abe said man you must be puttin' me on",
+                answer: "Abraham",
+                song: "Highway 61 Revisited (1965)"
+            }
+        ];
+
+        let currentQuotes = [];
+        let currentIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function startQuiz() {
+            currentQuotes = shuffleArray(quotes).slice(0, 10);
+            currentIndex = 0;
+            score = 0;
+            answered = false;
+
+            document.getElementById('score').textContent = score;
+            document.getElementById('total').textContent = 0;
+            document.getElementById('questions').textContent = currentQuotes.length;
+            document.getElementById('result-section').classList.add('hidden');
+            document.getElementById('quiz-section').classList.remove('hidden');
+
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const quote = currentQuotes[currentIndex];
+            document.getElementById('quote').innerHTML = `"${quote.text.replace('____', '<span class="blank">____</span>')}"`;
+            document.getElementById('song').textContent = '';
+            document.getElementById('song').classList.add('hidden');
+            document.getElementById('current').textContent = currentIndex + 1;
+            document.getElementById('answer').value = '';
+            document.getElementById('answer').focus();
+            document.getElementById('feedback').classList.add('hidden');
+            document.getElementById('next-section').classList.add('hidden');
+            document.getElementById('submit-btn').classList.remove('hidden');
+            answered = false;
+        }
+
+        function checkAnswer() {
+            if (answered) return;
+
+            const userAnswer = document.getElementById('answer').value.trim().toLowerCase();
+            const correctAnswer = currentQuotes[currentIndex].answer.toLowerCase();
+            const feedback = document.getElementById('feedback');
+            const songElement = document.getElementById('song');
+
+            answered = true;
+            document.getElementById('total').textContent = currentIndex + 1;
+
+            if (userAnswer === correctAnswer) {
+                score++;
+                document.getElementById('score').textContent = score;
+                feedback.textContent = 'Rätt!';
+                feedback.className = 'feedback correct';
+                document.querySelector('.blank').textContent = correctAnswer;
+            } else {
+                feedback.textContent = `Fel! Rätt svar: "${correctAnswer}"`;
+                feedback.className = 'feedback wrong';
+                document.querySelector('.blank').textContent = correctAnswer;
+            }
+
+            songElement.textContent = `— ${currentQuotes[currentIndex].song}`;
+            songElement.classList.remove('hidden');
+
+            feedback.classList.remove('hidden');
+            document.getElementById('submit-btn').classList.add('hidden');
+            document.getElementById('next-section').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+
+            if (currentIndex >= currentQuotes.length) {
+                showResult();
+            } else {
+                showQuestion();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('quiz-section').classList.add('hidden');
+            document.getElementById('result-section').classList.remove('hidden');
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('final-total').textContent = currentQuotes.length;
+        }
+
+        // Event listeners
+        document.getElementById('submit-btn').addEventListener('click', checkAnswer);
+        document.getElementById('next-btn').addEventListener('click', nextQuestion);
+        document.getElementById('restart-btn').addEventListener('click', startQuiz);
+
+        document.getElementById('answer').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                if (!answered) {
+                    checkAnswer();
+                } else {
+                    nextQuestion();
+                }
+            }
+        });
+
+        // Start the quiz
+        startQuiz();
+    </script>
+</body>
+</html>
